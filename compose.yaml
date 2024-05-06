@@ -1,16 +1,38 @@
 services:
-  mongodb:
-    image: 'mongo:latest'
-    environment:
-      - 'MONGO_INITDB_DATABASE=mydatabase'
-      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-      - 'MONGO_INITDB_ROOT_USERNAME=root'
+  profile-managment-service:
+    image: openjdk:22-jdk-oracle
+    container_name: profilemanagmentimage
     ports:
-      - '27017'
-  rabbitmq:
-    image: 'rabbitmq:latest'
-    environment:
-      - 'RABBITMQ_DEFAULT_PASS=secret'
-      - 'RABBITMQ_DEFAULT_USER=myuser'
+      - "8085:8080"
+      - "8005:8000"
+    expose:
+      - "8005"
+    depends_on:
+      - profilemanagment-db
+    networks:
+      - greenspot-net
+    volumes:
+      - ./build/libs/ProfileManagmentService-v0.0.0.jar:/app/app.jar
+    working_dir: /app
+    entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
+
+  profilemanagment-db:
+    image: mongo:latest
+    container_name: profilemanagment-db
     ports:
-      - '5672'
+      - "27021:27017"
+    volumes:
+      - mongo_profilemanagment:/etc/mongo
+      - mongo_profilemanagment_data:/data/db
+      - mongo_profilemanagment_config:/data/configdb
+    networks:
+      - greenspot-net
+
+networks:
+  greenspot-net:
+    name: greenspot_net
+
+volumes:
+  mongo_profilemanagment:
+  mongo_profilemanagment_data:
+  mongo_profilemanagment_config:
