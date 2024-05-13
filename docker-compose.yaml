@@ -3,10 +3,10 @@ services:
     image: openjdk:22-jdk-oracle
     container_name: profilemanagmentimage
     ports:
-      - "8085:8080"
-      - "8005:8000"
+      - "8086:8080"
+      - "8006:8000"
     expose:
-      - "8005"
+      - "8006"
     depends_on:
       - profilemanagment-db
     networks:
@@ -18,7 +18,7 @@ services:
 
   profilemanagment-db:
     image: mongo:latest
-    container_name: profilemanagment-db
+    container_name: profilemanagmentdb
     ports:
       - "27021:27017"
     volumes:
