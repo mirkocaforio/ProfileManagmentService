@@ -85,7 +85,7 @@ public class ProfileController {
         List<GenericProfile> profiles = profileService.findProfiles(role, name, surname, email, isEnabled, registrationDate, residenceCity, residenceAddress, phoneNumber, fiscalCode, birthDate);
 
         if (profiles.isEmpty())
-            throw new ProfileNotFoundException();
+            throw new ProfileNotFoundException("No profiles found with the specified filters.");
 
         for (GenericProfile profile : profiles) {
             if (profile instanceof UserProfile) {
@@ -106,7 +106,7 @@ public class ProfileController {
         Optional<GenericProfile> profile = profileRepository.findById(profileToUpdate.getId());
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException();
+            throw new ProfileNotFoundException("Profile not found with id: " + profileToUpdate.getId() + ".");
 
         GenericProfile retProfile = profile.get();
 
@@ -148,7 +148,7 @@ public class ProfileController {
         Optional<GenericProfile> profile = profileRepository.findById(profileId);
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException();
+            throw new ProfileNotFoundException("Profile not found with id: " + profileId + ".");
 
         GenericProfile retProfile = profile.get();
 
@@ -179,7 +179,7 @@ public class ProfileController {
         Optional<GenericProfile> profile = profileRepository.findById(profileId);
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException();
+            throw new ProfileNotFoundException("Profile not found with id: " + profileId + ".");
 
         GenericProfile retProfile = profile.get();
 
