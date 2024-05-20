@@ -1,14 +1,12 @@
 services:
   profile-managment-service:
     image: openjdk:22-jdk-oracle
-    container_name: profilemanagmentimage
+    container_name: profileimage
     ports:
-      - "8086:8080"
-      - "8006:8000"
-    expose:
-      - "8006"
+      - "${SERVICE_PORT1}:8080"
+      - "${SERVICE_PORT2}:8000"
     depends_on:
-      - profilemanagment-db
+      - profile-db
     networks:
       - greenspot-net
     volumes:
@@ -16,15 +14,15 @@ services:
     working_dir: /app
     entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
 
-  profilemanagment-db:
+  profile-db:
     image: mongo:latest
-    container_name: profilemanagmentdb
+    container_name: profiledb
     ports:
-      - "27021:27017"
+      - "${MONGO_PORT}:27017"
     volumes:
-      - mongo_profilemanagment:/etc/mongo
-      - mongo_profilemanagment_data:/data/db
-      - mongo_profilemanagment_config:/data/configdb
+      - mongo_profile:/etc/mongo
+      - mongo_profile_data:/data/db
+      - mongo_profile_config:/data/configdb
     networks:
       - greenspot-net
 
@@ -33,6 +31,6 @@ networks:
     name: greenspot_net
 
 volumes:
-  mongo_profilemanagment:
-  mongo_profilemanagment_data:
-  mongo_profilemanagment_config:
+  mongo_profile:
+  mongo_profile_data:
+  mongo_profile_config:

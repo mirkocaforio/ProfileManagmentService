@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static it.unisalento.pasproject.profilemanagmentservice.security.SecurityConstants.*;
+
 @RestController
 @RequestMapping("/api/profile")
 public class ProfileController {
@@ -30,7 +32,6 @@ public class ProfileController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileController.class);
 
-    //TODO: Implementare i metodi di invio del ProfileMessageHandler
     private final ProfileMessageHandler profileMessageHandler;
 
     @Autowired
@@ -41,7 +42,7 @@ public class ProfileController {
     }
 
     @GetMapping("/find/all")
-    @Secured({"ADMIN", "UTENTE", "MEMBRO"})
+    @Secured({ROLE_ADMIN, ROLE_UTENTE, ROLE_MEMBRO})
     public GenericProfileListDTO getAllProfiles() {
         GenericProfileListDTO profileList = new GenericProfileListDTO();
         List<GenericProfileDTO> list = new ArrayList<>();
@@ -66,7 +67,7 @@ public class ProfileController {
     }
 
     @GetMapping("/find")
-    @Secured({"ADMIN", "UTENTE", "MEMBRO"})
+    @Secured({ROLE_ADMIN, ROLE_UTENTE, ROLE_MEMBRO})
     public GenericProfileListDTO getProfileWithFilters(@RequestParam String role,
                                                        @RequestParam(required = false) String name,
                                                        @RequestParam(required = false) String surname,
@@ -101,7 +102,7 @@ public class ProfileController {
     }
 
     @PutMapping(value = "/updateProfile", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Secured({"UTENTE", "MEMBRO", "ADMIN"})
+    @Secured({ROLE_ADMIN, ROLE_UTENTE, ROLE_MEMBRO})
     public GenericProfileDTO updateProfile(@RequestBody GenericProfileDTO profileToUpdate) throws ProfileNotFoundException {
         Optional<GenericProfile> profile = profileRepository.findById(profileToUpdate.getId());
 
@@ -112,38 +113,41 @@ public class ProfileController {
 
         retProfile = profileService.updateProfile(retProfile, profileToUpdate);
 
-        if (retProfile instanceof UserProfile retUserProfile) {
-            UserProfileDTO userProfileDTO = (UserProfileDTO) profileToUpdate;
+        switch (retProfile) {
+            case UserProfile retUserProfile -> {
+                UserProfileDTO userProfileDTO = (UserProfileDTO) profileToUpdate;
 
-            retUserProfile = profileService.updateUserProfile(retUserProfile, userProfileDTO);
+                retUserProfile = profileService.updateUserProfile(retUserProfile, userProfileDTO);
 
-            retUserProfile = profileRepository.save(retUserProfile);
+                retUserProfile = profileRepository.save(retUserProfile);
 
-            profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retUserProfile));
+                profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retUserProfile));
 
-            return profileService.getUserProfileDTO(retUserProfile);
-        } else if (retProfile instanceof MemberProfile retMemberProfile) {
-            MemberProfileDTO memberProfileDTO = (MemberProfileDTO) profileToUpdate;
+                return profileService.getUserProfileDTO(retUserProfile);
+            }
+            case MemberProfile retMemberProfile -> {
+                MemberProfileDTO memberProfileDTO = (MemberProfileDTO) profileToUpdate;
 
-            retMemberProfile = profileService.updateMemberProfile(retMemberProfile, memberProfileDTO);
+                retMemberProfile = profileService.updateMemberProfile(retMemberProfile, memberProfileDTO);
 
-            retMemberProfile = profileRepository.save(retMemberProfile);
+                retMemberProfile = profileRepository.save(retMemberProfile);
 
-            profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retMemberProfile));
+                profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retMemberProfile));
 
-            return profileService.getMemberProfileDTO(retMemberProfile);
-        } else if (retProfile instanceof AdminProfile retAdminProfile) {
+                return profileService.getMemberProfileDTO(retMemberProfile);
+            }
+            case AdminProfile retAdminProfile -> {
 
-            profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retAdminProfile));
+                profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retAdminProfile));
 
-            return profileService.getAdminProfileDTO(retAdminProfile);
-        } else {
-            throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+                return profileService.getAdminProfileDTO(retAdminProfile);
+            }
+            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
         }
     }
 
     @PutMapping("/enableProfile/{profileId}")
-    @Secured("ADMIN")
+    @Secured(ROLE_ADMIN)
     public GenericProfileDTO enableProfile(@PathVariable String profileId) throws ProfileNotFoundException {
         Optional<GenericProfile> profile = profileRepository.findById(profileId);
 
@@ -174,7 +178,7 @@ public class ProfileController {
     }
 
     @PutMapping("/disableProfile/{profileId}")
-    @Secured("ADMIN")
+    @Secured(ROLE_ADMIN)
     public GenericProfileDTO disableProfile(@PathVariable String profileId) throws ProfileNotFoundException {
         Optional<GenericProfile> profile = profileRepository.findById(profileId);
 

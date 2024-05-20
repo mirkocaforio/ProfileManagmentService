@@ -1,4 +1,4 @@
-package it.unisalento.pasproject.profilemanagmentservice.security;
+package it.unisalento.pasproject.profilemanagmentservice.dto;
 
 import lombok.Getter;
 import lombok.Setter;

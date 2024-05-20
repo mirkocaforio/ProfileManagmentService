@@ -1,5 +1,6 @@
 package it.unisalento.pasproject.profilemanagmentservice.configuration;
 
+import it.unisalento.pasproject.profilemanagmentservice.security.ExceptionFilter;
 import it.unisalento.pasproject.profilemanagmentservice.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,12 +32,6 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        /*http.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("api/tasks/test").permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));*/
-
         // Configurazione CORS
         http.cors(AbstractHttpConfigurer::disable); // Disabilita CORS
 
@@ -70,4 +65,8 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter();
     }
 
+    @Bean
+    public ExceptionFilter exceptionFilter() {
+        return new ExceptionFilter();
+    }
 }
