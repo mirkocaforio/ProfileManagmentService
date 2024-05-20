@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * It enables method security and configures the security filter chain.
  */
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
     /**
      * Configures the security filter chain for the application.
@@ -65,6 +65,11 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter();
     }
 
+    /**
+     * Creates an ExceptionFilter bean.
+     *
+     * @return An ExceptionFilter object.
+     */
     @Bean
     public ExceptionFilter exceptionFilter() {
         return new ExceptionFilter();
