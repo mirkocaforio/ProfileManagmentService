@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 /**
  * SecurityConfig is a configuration class that sets up the security settings for the application.
@@ -37,6 +38,8 @@ public class SecurityConfig {
 
         // Configurazione CSRF
         http.csrf(AbstractHttpConfigurer::disable); // Disabilita CSRF
+
+        http.addFilterBefore(exceptionFilter(), LogoutFilter.class);
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
