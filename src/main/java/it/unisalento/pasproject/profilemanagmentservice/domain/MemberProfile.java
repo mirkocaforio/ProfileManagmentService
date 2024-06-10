@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class MemberProfile extends GenericProfile {
     private String residenceCity;
     private String residenceAddress;
+    private String phoneNumber;
     private String fiscalCode;
     private LocalDateTime birthDate;
 

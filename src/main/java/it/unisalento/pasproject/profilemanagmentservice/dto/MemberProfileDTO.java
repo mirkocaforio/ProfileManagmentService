@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MemberProfileDTO extends GenericProfileDTO {
     private String residenceCity;
     private String residenceAddress;
+    private String phoneNumber;
     private String fiscalCode;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime birthDate;

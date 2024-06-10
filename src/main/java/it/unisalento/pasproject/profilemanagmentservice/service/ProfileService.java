@@ -80,6 +80,7 @@ public class ProfileService {
         Optional.ofNullable(memberProfileDTO.getRegistrationDate()).ifPresent(memberProfile::setRegistrationDate);
         Optional.ofNullable(memberProfileDTO.getResidenceCity()).ifPresent(memberProfile::setResidenceCity);
         Optional.ofNullable(memberProfileDTO.getResidenceAddress()).ifPresent(memberProfile::setResidenceAddress);
+        Optional.ofNullable(memberProfileDTO.getPhoneNumber()).ifPresent(memberProfile::setPhoneNumber);
         Optional.ofNullable(memberProfileDTO.getFiscalCode()).ifPresent(memberProfile::setFiscalCode);
         Optional.ofNullable(memberProfileDTO.getBirthDate()).ifPresent(memberProfile::setBirthDate);
 
@@ -157,6 +158,7 @@ public class ProfileService {
         memberProfileDTO.setRegistrationDate(memberProfile.getRegistrationDate());
         memberProfileDTO.setResidenceCity(memberProfile.getResidenceCity());
         memberProfileDTO.setResidenceAddress(memberProfile.getResidenceAddress());
+        memberProfileDTO.setPhoneNumber(memberProfile.getPhoneNumber());
         memberProfileDTO.setFiscalCode(memberProfile.getFiscalCode());
         memberProfileDTO.setBirthDate(memberProfile.getBirthDate());
 
@@ -225,6 +227,7 @@ public class ProfileService {
 
         Optional.ofNullable(memberProfileDTO.getResidenceCity()).ifPresent(memberProfile::setResidenceCity);
         Optional.ofNullable(memberProfileDTO.getResidenceAddress()).ifPresent(memberProfile::setResidenceAddress);
+        Optional.ofNullable(memberProfileDTO.getPhoneNumber()).ifPresent(memberProfile::setPhoneNumber);
         Optional.ofNullable(memberProfileDTO.getFiscalCode()).ifPresent(memberProfile::setFiscalCode);
         Optional.ofNullable(memberProfileDTO.getBirthDate()).ifPresent(memberProfile::setBirthDate);
 
@@ -260,6 +263,7 @@ public class ProfileService {
         Optional.ofNullable(memberProfile.getRegistrationDate()).ifPresent(updatedProfileMessageDTO::setRegistrationDate);
         Optional.ofNullable(memberProfile.getResidenceCity()).ifPresent(updatedProfileMessageDTO::setResidenceCity);
         Optional.ofNullable(memberProfile.getResidenceAddress()).ifPresent(updatedProfileMessageDTO::setResidenceAddress);
+        Optional.ofNullable(memberProfile.getPhoneNumber()).ifPresent(updatedProfileMessageDTO::setPhoneNumber);
         Optional.ofNullable(memberProfile.getFiscalCode()).ifPresent(updatedProfileMessageDTO::setFiscalCode);
         Optional.ofNullable(memberProfile.getBirthDate()).ifPresent(updatedProfileMessageDTO::setBirthDate);
 
