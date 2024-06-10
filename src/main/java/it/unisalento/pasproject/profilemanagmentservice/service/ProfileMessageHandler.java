@@ -41,23 +41,27 @@ public class ProfileMessageHandler {
 
     @RabbitListener(queues = "${rabbitmq.queue.data.name}")
     public void receiveRegistrationInfoMessage(RegistrationDTO registrationDTO) {
-        LOGGER.info("Received message: {}", registrationDTO.toString());
-        switch (registrationDTO.getRole()) {
-            case "UTENTE":
-                UserProfile userProfile = profileService.getUserProfile(registrationDTO);
-                profileRepository.save(userProfile);
-                LOGGER.info("UserProfile: {}", userProfile.getId());
-                break;
-            case "MEMBRO":
-                MemberProfile memberProfile = profileService.getMemberProfile(registrationDTO);
-                profileRepository.save(memberProfile);
-                LOGGER.info("MemberProfile: {}", memberProfile.getId());
-                break;
-            case "ADMIN":
-                AdminProfile adminProfile = profileService.getAdminProfile(registrationDTO);
-                profileRepository.save(adminProfile);
-                LOGGER.info("AdminProfile: {}", adminProfile.getId());
-                break;
+        try {
+            LOGGER.info("Received message: {}", registrationDTO.toString());
+            switch (registrationDTO.getRole()) {
+                case "UTENTE":
+                    UserProfile userProfile = profileService.getUserProfile(registrationDTO);
+                    profileRepository.save(userProfile);
+                    LOGGER.info("UserProfile: {}", userProfile.getId());
+                    break;
+                case "MEMBRO":
+                    MemberProfile memberProfile = profileService.getMemberProfile(registrationDTO);
+                    profileRepository.save(memberProfile);
+                    LOGGER.info("MemberProfile: {}", memberProfile.getId());
+                    break;
+                case "ADMIN":
+                    AdminProfile adminProfile = profileService.getAdminProfile(registrationDTO);
+                    profileRepository.save(adminProfile);
+                    LOGGER.info("AdminProfile: {}", adminProfile.getId());
+                    break;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error: {}", e.getMessage());
         }
     }
 }
