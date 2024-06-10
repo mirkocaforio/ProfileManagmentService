@@ -150,13 +150,13 @@ public class ProfileController {
         }
     }
 
-    @PutMapping("/enableProfile/{profileId}")
+    @PutMapping("/enable/{profileEmail}")
     @Secured(ROLE_ADMIN)
-    public GenericProfileDTO enableProfile(@PathVariable String profileId) throws ProfileNotFoundException {
-        Optional<GenericProfile> profile = profileRepository.findById(profileId);
+    public GenericProfileDTO enableProfile(@PathVariable String profileEmail) throws ProfileNotFoundException {
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with id: " + profileId + ".");
+            throw new ProfileNotFoundException("Profile not found with id: " + profileEmail + ".");
 
         GenericProfile retProfile = profile.get();
 
@@ -181,13 +181,13 @@ public class ProfileController {
         }
     }
 
-    @PutMapping("/disableProfile/{profileId}")
+    @PutMapping("/disable/{profileEmail}")
     @Secured(ROLE_ADMIN)
-    public GenericProfileDTO disableProfile(@PathVariable String profileId) throws ProfileNotFoundException {
-        Optional<GenericProfile> profile = profileRepository.findById(profileId);
+    public GenericProfileDTO disableProfile(@PathVariable String profileEmail) throws ProfileNotFoundException {
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with id: " + profileId + ".");
+            throw new ProfileNotFoundException("Profile not found with email: " + profileEmail + ".");
 
         GenericProfile retProfile = profile.get();
 
