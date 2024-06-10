@@ -104,10 +104,14 @@ public class ProfileController {
     @PutMapping(value = "/updateProfile", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Secured({ROLE_ADMIN, ROLE_UTENTE, ROLE_MEMBRO})
     public GenericProfileDTO updateProfile(@RequestBody GenericProfileDTO profileToUpdate) throws ProfileNotFoundException {
-        Optional<GenericProfile> profile = profileRepository.findById(profileToUpdate.getId());
+
+        if(profileToUpdate.getEmail() == null)
+            throw new ProfileNotFoundException("Missing email.");
+
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileToUpdate.getEmail());
 
         if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with id: " + profileToUpdate.getId() + ".");
+            throw new ProfileNotFoundException("Profile not found with email: " + profileToUpdate.getEmail() + ".");
 
         GenericProfile retProfile = profile.get();
 
