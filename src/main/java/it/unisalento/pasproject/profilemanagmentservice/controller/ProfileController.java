@@ -5,6 +5,7 @@ import it.unisalento.pasproject.profilemanagmentservice.domain.GenericProfile;
 import it.unisalento.pasproject.profilemanagmentservice.domain.MemberProfile;
 import it.unisalento.pasproject.profilemanagmentservice.domain.UserProfile;
 import it.unisalento.pasproject.profilemanagmentservice.dto.*;
+import it.unisalento.pasproject.profilemanagmentservice.exceptions.InvalidProfileTypeException;
 import it.unisalento.pasproject.profilemanagmentservice.exceptions.ProfileNotFoundException;
 import it.unisalento.pasproject.profilemanagmentservice.repositories.ProfileRepository;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileMessageHandler;
@@ -177,7 +178,7 @@ public class ProfileController {
                 profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retAdminProfile));
                 return profileService.getAdminProfileDTO(retAdminProfile);
             }
-            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+            default -> throw new InvalidProfileTypeException("Invalid profile type: " + retProfile.getClass());
         }
     }
 
@@ -208,7 +209,7 @@ public class ProfileController {
                 profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retAdminProfile));
                 return profileService.getAdminProfileDTO(retAdminProfile);
             }
-            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+            default -> throw new InvalidProfileTypeException("Invalid profile type: " + retProfile.getClass());
         }
     }
 
