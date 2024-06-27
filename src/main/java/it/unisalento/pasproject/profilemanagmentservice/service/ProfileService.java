@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,164 +23,17 @@ import java.util.Optional;
 public class ProfileService {
     private final MongoTemplate mongoTemplate;
 
-    private final ProfileRepository profileRepository;
-
     private final ProfileDTOFactory profileDTOFactory;
 
     private final ProfileFactory profileFactory;
 
-    private final ProfileMessageHandler profileMessageHandler;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
 
     @Autowired
-    public ProfileService(MongoTemplate mongoTemplate, ProfileRepository profileRepository, ProfileMessageHandler profileMessageHandler) {
+    public ProfileService(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
-        this.profileRepository = profileRepository;
         this.profileDTOFactory = new ProfileDTOFactory();
         this.profileFactory = new ProfileFactory();
-        this.profileMessageHandler = profileMessageHandler;
-    }
-
-    public GenericProfileListDTO getAllProfiles() {
-        GenericProfileListDTO profileList = new GenericProfileListDTO();
-        List<GenericProfileDTO> list = new ArrayList<>();
-        profileList.setProfilesList(list);
-
-        List<GenericProfile> profiles = profileRepository.findAll();
-
-        for (GenericProfile profile : profiles) {
-            if (profile instanceof UserProfile) {
-                list.add(getUserProfileDTO((UserProfile) profile));
-            } else if (profile instanceof MemberProfile) {
-                list.add(getMemberProfileDTO((MemberProfile) profile));
-            } else if (profile instanceof AdminProfile) {
-                list.add(getAdminProfileDTO((AdminProfile) profile));
-            }
-        }
-
-        return profileList;
-    }
-
-    public GenericProfileListDTO getProfileWithFilters(ProfileQueryFilters profileQueryFilters) {
-        GenericProfileListDTO profileList = new GenericProfileListDTO();
-        List<GenericProfileDTO> list = new ArrayList<>();
-        profileList.setProfilesList(list);
-
-        List<GenericProfile> profiles = findProfiles(profileQueryFilters);
-
-        for (GenericProfile profile : profiles) {
-            if (profile instanceof UserProfile) {
-                list.add(getUserProfileDTO((UserProfile) profile));
-            } else if (profile instanceof MemberProfile) {
-                list.add(getMemberProfileDTO((MemberProfile) profile));
-            } else if (profile instanceof AdminProfile) {
-                list.add(getAdminProfileDTO((AdminProfile) profile));
-            }
-        }
-
-        return profileList;
-    }
-
-    public GenericProfileDTO updateProfile(GenericProfileDTO profileToUpdate) {
-        Optional<GenericProfile> profile = profileRepository.findByEmail(profileToUpdate.getEmail());
-
-        if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with email: " + profileToUpdate.getEmail() + ".");
-
-        GenericProfile retProfile = profile.get();
-
-        retProfile = updateProfile(retProfile, profileToUpdate);
-
-        switch (retProfile) {
-            case UserProfile retUserProfile -> {
-                UserProfileDTO userProfileDTO = (UserProfileDTO) profileToUpdate;
-
-                retUserProfile = updateUserProfile(retUserProfile, userProfileDTO);
-
-                retUserProfile = profileRepository.save(retUserProfile);
-
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
-
-                return getUserProfileDTO(retUserProfile);
-            }
-            case MemberProfile retMemberProfile -> {
-                MemberProfileDTO memberProfileDTO = (MemberProfileDTO) profileToUpdate;
-
-                retMemberProfile = updateMemberProfile(retMemberProfile, memberProfileDTO);
-
-                retMemberProfile = profileRepository.save(retMemberProfile);
-
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
-
-                return getMemberProfileDTO(retMemberProfile);
-            }
-            case AdminProfile retAdminProfile -> {
-
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
-
-                return getAdminProfileDTO(retAdminProfile);
-            }
-            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
-        }
-    }
-
-    public GenericProfileDTO enableProfile(String profileEmail) {
-        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
-
-        if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with email: " + profileEmail + ".");
-
-        GenericProfile retProfile = profile.get();
-
-        retProfile.setEnabled(true);
-
-        retProfile = profileRepository.save(retProfile);
-
-        switch (retProfile) {
-            case UserProfile retUserProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
-                return getUserProfileDTO(retUserProfile);
-            }
-            case MemberProfile retMemberProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
-                return getMemberProfileDTO(retMemberProfile);
-            }
-            case AdminProfile retAdminProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
-                return getAdminProfileDTO(retAdminProfile);
-            }
-            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
-        }
-    }
-
-    public GenericProfileDTO disableProfile(String profileEmail) {
-        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
-
-        if (profile.isEmpty())
-            throw new ProfileNotFoundException("Profile not found with email: " + profileEmail + ".");
-
-        GenericProfile retProfile = profile.get();
-
-        retProfile.setEnabled(false);
-
-        retProfile = profileRepository.save(retProfile);
-
-        switch (retProfile) {
-            case UserProfile retUserProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
-                return getUserProfileDTO(retUserProfile);
-            }
-            case MemberProfile retMemberProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
-                return getMemberProfileDTO(retMemberProfile);
-            }
-            case AdminProfile retAdminProfile -> {
-                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
-                return getAdminProfileDTO(retAdminProfile);
-            }
-            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
-        }
     }
 
     public UserProfile getUserProfile(UserProfileDTO userProfileDTO) {
