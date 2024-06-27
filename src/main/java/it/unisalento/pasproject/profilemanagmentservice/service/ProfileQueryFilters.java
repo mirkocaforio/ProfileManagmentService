@@ -1,7 +1,5 @@
-package it.unisalento.pasproject.profilemanagmentservice.dto;
+package it.unisalento.pasproject.profilemanagmentservice.service;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,22 +7,19 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class UpdatedProfileMessageDTO {
+public class ProfileQueryFilters {
+    private String role;
     private String name;
     private String surname;
     private String email;
-    private String role;
-    private boolean isEnabled;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private Boolean isEnabled;
     private LocalDateTime registrationDate;
     private String residenceCity;
     private String residenceAddress;
     private String phoneNumber;
     private String fiscalCode;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime birthDate;
     private String cardNumber;
     private String cardHolderName;
     private String expiryDate;
-    private String cvv;
 }

@@ -2,6 +2,8 @@ package it.unisalento.pasproject.profilemanagmentservice.service;
 
 import it.unisalento.pasproject.profilemanagmentservice.domain.*;
 import it.unisalento.pasproject.profilemanagmentservice.dto.*;
+import it.unisalento.pasproject.profilemanagmentservice.exceptions.ProfileNotFoundException;
+import it.unisalento.pasproject.profilemanagmentservice.repositories.ProfileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,26 +16,172 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class ProfileService {
     private final MongoTemplate mongoTemplate;
 
+    private final ProfileRepository profileRepository;
+
     private final ProfileDTOFactory profileDTOFactory;
 
     private final ProfileFactory profileFactory;
 
+    private final ProfileMessageHandler profileMessageHandler;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
 
     @Autowired
-    public ProfileService(MongoTemplate mongoTemplate) {
+    public ProfileService(MongoTemplate mongoTemplate, ProfileRepository profileRepository, ProfileMessageHandler profileMessageHandler) {
         this.mongoTemplate = mongoTemplate;
+        this.profileRepository = profileRepository;
         this.profileDTOFactory = new ProfileDTOFactory();
         this.profileFactory = new ProfileFactory();
+        this.profileMessageHandler = profileMessageHandler;
+    }
+
+    public GenericProfileListDTO getAllProfiles() {
+        GenericProfileListDTO profileList = new GenericProfileListDTO();
+        List<GenericProfileDTO> list = new ArrayList<>();
+        profileList.setProfilesList(list);
+
+        List<GenericProfile> profiles = profileRepository.findAll();
+
+        for (GenericProfile profile : profiles) {
+            if (profile instanceof UserProfile) {
+                list.add(getUserProfileDTO((UserProfile) profile));
+            } else if (profile instanceof MemberProfile) {
+                list.add(getMemberProfileDTO((MemberProfile) profile));
+            } else if (profile instanceof AdminProfile) {
+                list.add(getAdminProfileDTO((AdminProfile) profile));
+            }
+        }
+
+        return profileList;
+    }
+
+    public GenericProfileListDTO getProfileWithFilters(ProfileQueryFilters profileQueryFilters) {
+        GenericProfileListDTO profileList = new GenericProfileListDTO();
+        List<GenericProfileDTO> list = new ArrayList<>();
+        profileList.setProfilesList(list);
+
+        List<GenericProfile> profiles = findProfiles(profileQueryFilters);
+
+        for (GenericProfile profile : profiles) {
+            if (profile instanceof UserProfile) {
+                list.add(getUserProfileDTO((UserProfile) profile));
+            } else if (profile instanceof MemberProfile) {
+                list.add(getMemberProfileDTO((MemberProfile) profile));
+            } else if (profile instanceof AdminProfile) {
+                list.add(getAdminProfileDTO((AdminProfile) profile));
+            }
+        }
+
+        return profileList;
+    }
+
+    public GenericProfileDTO updateProfile(GenericProfileDTO profileToUpdate) {
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileToUpdate.getEmail());
+
+        if (profile.isEmpty())
+            throw new ProfileNotFoundException("Profile not found with email: " + profileToUpdate.getEmail() + ".");
+
+        GenericProfile retProfile = profile.get();
+
+        retProfile = updateProfile(retProfile, profileToUpdate);
+
+        switch (retProfile) {
+            case UserProfile retUserProfile -> {
+                UserProfileDTO userProfileDTO = (UserProfileDTO) profileToUpdate;
+
+                retUserProfile = updateUserProfile(retUserProfile, userProfileDTO);
+
+                retUserProfile = profileRepository.save(retUserProfile);
+
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
+
+                return getUserProfileDTO(retUserProfile);
+            }
+            case MemberProfile retMemberProfile -> {
+                MemberProfileDTO memberProfileDTO = (MemberProfileDTO) profileToUpdate;
+
+                retMemberProfile = updateMemberProfile(retMemberProfile, memberProfileDTO);
+
+                retMemberProfile = profileRepository.save(retMemberProfile);
+
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
+
+                return getMemberProfileDTO(retMemberProfile);
+            }
+            case AdminProfile retAdminProfile -> {
+
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
+
+                return getAdminProfileDTO(retAdminProfile);
+            }
+            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+        }
+    }
+
+    public GenericProfileDTO enableProfile(String profileEmail) {
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
+
+        if (profile.isEmpty())
+            throw new ProfileNotFoundException("Profile not found with email: " + profileEmail + ".");
+
+        GenericProfile retProfile = profile.get();
+
+        retProfile.setEnabled(true);
+
+        retProfile = profileRepository.save(retProfile);
+
+        switch (retProfile) {
+            case UserProfile retUserProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
+                return getUserProfileDTO(retUserProfile);
+            }
+            case MemberProfile retMemberProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
+                return getMemberProfileDTO(retMemberProfile);
+            }
+            case AdminProfile retAdminProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
+                return getAdminProfileDTO(retAdminProfile);
+            }
+            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+        }
+    }
+
+    public GenericProfileDTO disableProfile(String profileEmail) {
+        Optional<GenericProfile> profile = profileRepository.findByEmail(profileEmail);
+
+        if (profile.isEmpty())
+            throw new ProfileNotFoundException("Profile not found with email: " + profileEmail + ".");
+
+        GenericProfile retProfile = profile.get();
+
+        retProfile.setEnabled(false);
+
+        retProfile = profileRepository.save(retProfile);
+
+        switch (retProfile) {
+            case UserProfile retUserProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retUserProfile));
+                return getUserProfileDTO(retUserProfile);
+            }
+            case MemberProfile retMemberProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retMemberProfile));
+                return getMemberProfileDTO(retMemberProfile);
+            }
+            case AdminProfile retAdminProfile -> {
+                profileMessageHandler.sendProfileMessage(getUpdatedProfileMessageDTO(retAdminProfile));
+                return getAdminProfileDTO(retAdminProfile);
+            }
+            default -> throw new IllegalArgumentException("Invalid profile type: " + retProfile.getClass());
+        }
     }
 
     public UserProfile getUserProfile(UserProfileDTO userProfileDTO) {
@@ -51,6 +199,10 @@ public class ProfileService {
         Optional.ofNullable(userProfileDTO.getPhoneNumber()).ifPresent(userProfile::setPhoneNumber);
         Optional.ofNullable(userProfileDTO.getFiscalCode()).ifPresent(userProfile::setFiscalCode);
         Optional.ofNullable(userProfileDTO.getBirthDate()).ifPresent(userProfile::setBirthDate);
+        Optional.ofNullable(userProfileDTO.getCardNumber()).ifPresent(userProfile::setCardNumber);
+        Optional.ofNullable(userProfileDTO.getCardHolderName()).ifPresent(userProfile::setCardHolderName);
+        Optional.ofNullable(userProfileDTO.getExpiryDate()).ifPresent(userProfile::setExpiryDate);
+        Optional.ofNullable(userProfileDTO.getCvv()).ifPresent(userProfile::setCvv);
 
         return userProfile;
     }
@@ -130,18 +282,22 @@ public class ProfileService {
     public UserProfileDTO getUserProfileDTO(UserProfile userProfile) {
         UserProfileDTO userProfileDTO = (UserProfileDTO) profileDTOFactory.getProfileType(ProfileDTOFactory.ProfileDTOType.UTENTE);
 
-        userProfileDTO.setId(userProfile.getId());
-        userProfileDTO.setName(userProfile.getName());
-        userProfileDTO.setSurname(userProfile.getSurname());
-        userProfileDTO.setEmail(userProfile.getEmail());
-        userProfileDTO.setRole(userProfile.getRole());
-        userProfileDTO.setEnabled(userProfile.isEnabled());
-        userProfileDTO.setRegistrationDate(userProfile.getRegistrationDate());
-        userProfileDTO.setResidenceCity(userProfile.getResidenceCity());
-        userProfileDTO.setResidenceAddress(userProfile.getResidenceAddress());
-        userProfileDTO.setPhoneNumber(userProfile.getPhoneNumber());
-        userProfileDTO.setFiscalCode(userProfile.getFiscalCode());
-        userProfileDTO.setBirthDate(userProfile.getBirthDate());
+        Optional.ofNullable(userProfile.getId()).ifPresent(userProfileDTO::setId);
+        Optional.ofNullable(userProfile.getName()).ifPresent(userProfileDTO::setName);
+        Optional.ofNullable(userProfile.getSurname()).ifPresent(userProfileDTO::setSurname);
+        Optional.ofNullable(userProfile.getEmail()).ifPresent(userProfileDTO::setEmail);
+        Optional.ofNullable(userProfile.getRole()).ifPresent(userProfileDTO::setRole);
+        Optional.of(userProfile.isEnabled()).ifPresent(userProfileDTO::setEnabled);
+        Optional.ofNullable(userProfile.getRegistrationDate()).ifPresent(userProfileDTO::setRegistrationDate);
+        Optional.ofNullable(userProfile.getResidenceCity()).ifPresent(userProfileDTO::setResidenceCity);
+        Optional.ofNullable(userProfile.getResidenceAddress()).ifPresent(userProfileDTO::setResidenceAddress);
+        Optional.ofNullable(userProfile.getPhoneNumber()).ifPresent(userProfileDTO::setPhoneNumber);
+        Optional.ofNullable(userProfile.getFiscalCode()).ifPresent(userProfileDTO::setFiscalCode);
+        Optional.ofNullable(userProfile.getBirthDate()).ifPresent(userProfileDTO::setBirthDate);
+        Optional.ofNullable(userProfile.getCardNumber()).ifPresent(userProfileDTO::setCardNumber);
+        Optional.ofNullable(userProfile.getCardHolderName()).ifPresent(userProfileDTO::setCardHolderName);
+        Optional.ofNullable(userProfile.getExpiryDate()).ifPresent(userProfileDTO::setExpiryDate);
+        Optional.ofNullable(userProfile.getCvv()).ifPresent(userProfileDTO::setCvv);
 
         return userProfileDTO;
     }
@@ -149,18 +305,18 @@ public class ProfileService {
     public MemberProfileDTO getMemberProfileDTO(MemberProfile memberProfile) {
         MemberProfileDTO memberProfileDTO = (MemberProfileDTO) profileDTOFactory.getProfileType(ProfileDTOFactory.ProfileDTOType.MEMBRO);
 
-        memberProfileDTO.setId(memberProfile.getId());
-        memberProfileDTO.setName(memberProfile.getName());
-        memberProfileDTO.setSurname(memberProfile.getSurname());
-        memberProfileDTO.setEmail(memberProfile.getEmail());
-        memberProfileDTO.setRole(memberProfile.getRole());
-        memberProfileDTO.setEnabled(memberProfile.isEnabled());
-        memberProfileDTO.setRegistrationDate(memberProfile.getRegistrationDate());
-        memberProfileDTO.setResidenceCity(memberProfile.getResidenceCity());
-        memberProfileDTO.setResidenceAddress(memberProfile.getResidenceAddress());
-        memberProfileDTO.setPhoneNumber(memberProfile.getPhoneNumber());
-        memberProfileDTO.setFiscalCode(memberProfile.getFiscalCode());
-        memberProfileDTO.setBirthDate(memberProfile.getBirthDate());
+        Optional.ofNullable(memberProfile.getId()).ifPresent(memberProfileDTO::setId);
+        Optional.ofNullable(memberProfile.getName()).ifPresent(memberProfileDTO::setName);
+        Optional.ofNullable(memberProfile.getSurname()).ifPresent(memberProfileDTO::setSurname);
+        Optional.ofNullable(memberProfile.getEmail()).ifPresent(memberProfileDTO::setEmail);
+        Optional.ofNullable(memberProfile.getRole()).ifPresent(memberProfileDTO::setRole);
+        Optional.of(memberProfile.isEnabled()).ifPresent(memberProfileDTO::setEnabled);
+        Optional.ofNullable(memberProfile.getRegistrationDate()).ifPresent(memberProfileDTO::setRegistrationDate);
+        Optional.ofNullable(memberProfile.getResidenceCity()).ifPresent(memberProfileDTO::setResidenceCity);
+        Optional.ofNullable(memberProfile.getResidenceAddress()).ifPresent(memberProfileDTO::setResidenceAddress);
+        Optional.ofNullable(memberProfile.getPhoneNumber()).ifPresent(memberProfileDTO::setPhoneNumber);
+        Optional.ofNullable(memberProfile.getFiscalCode()).ifPresent(memberProfileDTO::setFiscalCode);
+        Optional.ofNullable(memberProfile.getBirthDate()).ifPresent(memberProfileDTO::setBirthDate);
 
         return memberProfileDTO;
     }
@@ -168,13 +324,13 @@ public class ProfileService {
     public AdminProfileDTO getAdminProfileDTO(AdminProfile adminProfile) {
         AdminProfileDTO adminProfileDTO = (AdminProfileDTO) profileDTOFactory.getProfileType(ProfileDTOFactory.ProfileDTOType.ADMIN);
 
-        adminProfileDTO.setId(adminProfile.getId());
-        adminProfileDTO.setName(adminProfile.getName());
-        adminProfileDTO.setSurname(adminProfile.getSurname());
-        adminProfileDTO.setEmail(adminProfile.getEmail());
-        adminProfileDTO.setRole(adminProfile.getRole());
-        adminProfileDTO.setEnabled(adminProfile.isEnabled());
-        adminProfileDTO.setRegistrationDate(adminProfile.getRegistrationDate());
+        Optional.ofNullable(adminProfile.getId()).ifPresent(adminProfileDTO::setId);
+        Optional.ofNullable(adminProfile.getName()).ifPresent(adminProfileDTO::setName);
+        Optional.ofNullable(adminProfile.getSurname()).ifPresent(adminProfileDTO::setSurname);
+        Optional.ofNullable(adminProfile.getEmail()).ifPresent(adminProfileDTO::setEmail);
+        Optional.ofNullable(adminProfile.getRole()).ifPresent(adminProfileDTO::setRole);
+        Optional.of(adminProfile.isEnabled()).ifPresent(adminProfileDTO::setEnabled);
+        Optional.ofNullable(adminProfile.getRegistrationDate()).ifPresent(adminProfileDTO::setRegistrationDate);
 
         return adminProfileDTO;
     }
@@ -210,6 +366,10 @@ public class ProfileService {
         Optional.ofNullable(userProfileDTO.getPhoneNumber()).ifPresent(userProfile::setPhoneNumber);
         Optional.ofNullable(userProfileDTO.getFiscalCode()).ifPresent(userProfile::setFiscalCode);
         Optional.ofNullable(userProfileDTO.getBirthDate()).ifPresent(userProfile::setBirthDate);
+        Optional.ofNullable(userProfileDTO.getCardNumber()).ifPresent(userProfile::setCardNumber);
+        Optional.ofNullable(userProfileDTO.getCardHolderName()).ifPresent(userProfile::setCardHolderName);
+        Optional.ofNullable(userProfileDTO.getExpiryDate()).ifPresent(userProfile::setExpiryDate);
+        Optional.ofNullable(userProfileDTO.getCvv()).ifPresent(userProfile::setCvv);
 
         return userProfile;
     }
@@ -248,6 +408,10 @@ public class ProfileService {
         Optional.ofNullable(userProfile.getPhoneNumber()).ifPresent(updatedProfileMessageDTO::setPhoneNumber);
         Optional.ofNullable(userProfile.getFiscalCode()).ifPresent(updatedProfileMessageDTO::setFiscalCode);
         Optional.ofNullable(userProfile.getBirthDate()).ifPresent(updatedProfileMessageDTO::setBirthDate);
+        Optional.ofNullable(userProfile.getCardNumber()).ifPresent(updatedProfileMessageDTO::setCardNumber);
+        Optional.ofNullable(userProfile.getCardHolderName()).ifPresent(updatedProfileMessageDTO::setCardHolderName);
+        Optional.ofNullable(userProfile.getExpiryDate()).ifPresent(updatedProfileMessageDTO::setExpiryDate);
+        Optional.ofNullable(userProfile.getCvv()).ifPresent(updatedProfileMessageDTO::setCvv);
 
         return updatedProfileMessageDTO;
     }
@@ -283,47 +447,63 @@ public class ProfileService {
         return updatedProfileMessageDTO;
     }
 
-    public List<GenericProfile> findProfiles(String role, String name, String surname, String email, Boolean isEnabled, LocalDateTime registrationDate, String residenceCity, String residenceAddress, String phoneNumber, String fiscalCode, LocalDateTime birthDate) {
+    public List<GenericProfile> findProfiles(ProfileQueryFilters profileQueryFilters) {
         Query query = new Query();
 
-        query.addCriteria(Criteria.where("role").is(role));
-
-        query.addCriteria(Criteria.where("isEnabled").is(Objects.requireNonNullElse(isEnabled, true)));
-
-        if (name != null) {
-            query.addCriteria(Criteria.where("name").is(name));
+        if (profileQueryFilters.getRole() != null) {
+            query.addCriteria(Criteria.where("role").is(profileQueryFilters.getRole()));
         }
 
-        if (surname != null) {
-            query.addCriteria(Criteria.where("surname").is(surname));
+        if (profileQueryFilters.getName() != null) {
+            query.addCriteria(Criteria.where("name").is(profileQueryFilters.getName()));
         }
 
-        if (email != null) {
-            query.addCriteria(Criteria.where("email").is(email));
+        if (profileQueryFilters.getSurname() != null) {
+            query.addCriteria(Criteria.where("surname").is(profileQueryFilters.getSurname()));
         }
 
-        if (registrationDate != null) {
-            query.addCriteria(Criteria.where("registrationDate").is(registrationDate));
+        if (profileQueryFilters.getEmail() != null) {
+            query.addCriteria(Criteria.where("email").is(profileQueryFilters.getEmail()));
         }
 
-        if (residenceCity != null) {
-            query.addCriteria(Criteria.where("residenceCity").is(residenceCity));
+        if (profileQueryFilters.getIsEnabled() != null) {
+            query.addCriteria(Criteria.where("isEnabled").is(profileQueryFilters.getIsEnabled()));
         }
 
-        if (residenceAddress != null) {
-            query.addCriteria(Criteria.where("residenceAddress").is(residenceAddress));
+        if (profileQueryFilters.getRegistrationDate() != null) {
+            query.addCriteria(Criteria.where("registrationDate").is(profileQueryFilters.getRegistrationDate()));
         }
 
-        if (phoneNumber != null) {
-            query.addCriteria(Criteria.where("phoneNumber").is(phoneNumber));
+        if (profileQueryFilters.getResidenceCity() != null) {
+            query.addCriteria(Criteria.where("residenceCity").is(profileQueryFilters.getResidenceCity()));
         }
 
-        if (fiscalCode != null) {
-            query.addCriteria(Criteria.where("fiscalCode").is(fiscalCode));
+        if (profileQueryFilters.getResidenceAddress() != null) {
+            query.addCriteria(Criteria.where("residenceAddress").is(profileQueryFilters.getResidenceAddress()));
         }
 
-        if (birthDate != null) {
-            query.addCriteria(Criteria.where("birthDate").is(birthDate));
+        if (profileQueryFilters.getPhoneNumber() != null) {
+            query.addCriteria(Criteria.where("phoneNumber").is(profileQueryFilters.getPhoneNumber()));
+        }
+
+        if (profileQueryFilters.getFiscalCode() != null) {
+            query.addCriteria(Criteria.where("fiscalCode").is(profileQueryFilters.getFiscalCode()));
+        }
+
+        if (profileQueryFilters.getBirthDate() != null) {
+            query.addCriteria(Criteria.where("birthDate").is(profileQueryFilters.getBirthDate()));
+        }
+
+        if (profileQueryFilters.getCardNumber() != null) {
+            query.addCriteria(Criteria.where("cardNumber").is(profileQueryFilters.getCardNumber()));
+        }
+
+        if (profileQueryFilters.getCardHolderName() != null) {
+            query.addCriteria(Criteria.where("cardHolderName").is(profileQueryFilters.getCardHolderName()));
+        }
+
+        if (profileQueryFilters.getExpiryDate() != null) {
+            query.addCriteria(Criteria.where("expiryDate").is(profileQueryFilters.getExpiryDate()));
         }
 
         LOGGER.info("\n{}\n", query);

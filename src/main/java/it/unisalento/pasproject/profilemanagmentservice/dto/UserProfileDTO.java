@@ -16,6 +16,10 @@ public class UserProfileDTO extends GenericProfileDTO {
     private String fiscalCode;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime birthDate;
+    private String cardNumber;
+    private String cardHolderName;
+    private String expiryDate;
+    private String cvv;
 
     public UserProfileDTO() {}
 }
