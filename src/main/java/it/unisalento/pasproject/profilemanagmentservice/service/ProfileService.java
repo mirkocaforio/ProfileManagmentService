@@ -2,8 +2,6 @@ package it.unisalento.pasproject.profilemanagmentservice.service;
 
 import it.unisalento.pasproject.profilemanagmentservice.domain.*;
 import it.unisalento.pasproject.profilemanagmentservice.dto.*;
-import it.unisalento.pasproject.profilemanagmentservice.exceptions.ProfileNotFoundException;
-import it.unisalento.pasproject.profilemanagmentservice.repositories.ProfileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +50,8 @@ public class ProfileService {
         Optional.ofNullable(userProfileDTO.getFiscalCode()).ifPresent(userProfile::setFiscalCode);
         Optional.ofNullable(userProfileDTO.getBirthDate()).ifPresent(userProfile::setBirthDate);
         Optional.ofNullable(userProfileDTO.getCardNumber()).ifPresent(userProfile::setCardNumber);
-        Optional.ofNullable(userProfileDTO.getCardHolderName()).ifPresent(userProfile::setCardHolderName);
-        Optional.ofNullable(userProfileDTO.getExpiryDate()).ifPresent(userProfile::setExpiryDate);
-        Optional.ofNullable(userProfileDTO.getCvv()).ifPresent(userProfile::setCvv);
+        Optional.ofNullable(userProfileDTO.getCardExpiryDate()).ifPresent(userProfile::setCardExpiryDate);
+        Optional.ofNullable(userProfileDTO.getCardCvv()).ifPresent(userProfile::setCardCvv);
 
         return userProfile;
     }
@@ -147,9 +144,8 @@ public class ProfileService {
         Optional.ofNullable(userProfile.getFiscalCode()).ifPresent(userProfileDTO::setFiscalCode);
         Optional.ofNullable(userProfile.getBirthDate()).ifPresent(userProfileDTO::setBirthDate);
         Optional.ofNullable(userProfile.getCardNumber()).ifPresent(userProfileDTO::setCardNumber);
-        Optional.ofNullable(userProfile.getCardHolderName()).ifPresent(userProfileDTO::setCardHolderName);
-        Optional.ofNullable(userProfile.getExpiryDate()).ifPresent(userProfileDTO::setExpiryDate);
-        Optional.ofNullable(userProfile.getCvv()).ifPresent(userProfileDTO::setCvv);
+        Optional.ofNullable(userProfile.getCardExpiryDate()).ifPresent(userProfileDTO::setCardExpiryDate);
+        Optional.ofNullable(userProfile.getCardCvv()).ifPresent(userProfileDTO::setCardCvv);
 
         return userProfileDTO;
     }
@@ -219,9 +215,8 @@ public class ProfileService {
         Optional.ofNullable(userProfileDTO.getFiscalCode()).ifPresent(userProfile::setFiscalCode);
         Optional.ofNullable(userProfileDTO.getBirthDate()).ifPresent(userProfile::setBirthDate);
         Optional.ofNullable(userProfileDTO.getCardNumber()).ifPresent(userProfile::setCardNumber);
-        Optional.ofNullable(userProfileDTO.getCardHolderName()).ifPresent(userProfile::setCardHolderName);
-        Optional.ofNullable(userProfileDTO.getExpiryDate()).ifPresent(userProfile::setExpiryDate);
-        Optional.ofNullable(userProfileDTO.getCvv()).ifPresent(userProfile::setCvv);
+        Optional.ofNullable(userProfileDTO.getCardExpiryDate()).ifPresent(userProfile::setCardExpiryDate);
+        Optional.ofNullable(userProfileDTO.getCardCvv()).ifPresent(userProfile::setCardCvv);
 
         return userProfile;
     }
@@ -261,9 +256,8 @@ public class ProfileService {
         Optional.ofNullable(userProfile.getFiscalCode()).ifPresent(updatedProfileMessageDTO::setFiscalCode);
         Optional.ofNullable(userProfile.getBirthDate()).ifPresent(updatedProfileMessageDTO::setBirthDate);
         Optional.ofNullable(userProfile.getCardNumber()).ifPresent(updatedProfileMessageDTO::setCardNumber);
-        Optional.ofNullable(userProfile.getCardHolderName()).ifPresent(updatedProfileMessageDTO::setCardHolderName);
-        Optional.ofNullable(userProfile.getExpiryDate()).ifPresent(updatedProfileMessageDTO::setExpiryDate);
-        Optional.ofNullable(userProfile.getCvv()).ifPresent(updatedProfileMessageDTO::setCvv);
+        Optional.ofNullable(userProfile.getCardExpiryDate()).ifPresent(updatedProfileMessageDTO::setCardExpiryDate);
+        Optional.ofNullable(userProfile.getCardCvv()).ifPresent(updatedProfileMessageDTO::setCardCvv);
 
         return updatedProfileMessageDTO;
     }
@@ -344,18 +338,6 @@ public class ProfileService {
 
         if (profileQueryFilters.getBirthDate() != null) {
             query.addCriteria(Criteria.where("birthDate").is(profileQueryFilters.getBirthDate()));
-        }
-
-        if (profileQueryFilters.getCardNumber() != null) {
-            query.addCriteria(Criteria.where("cardNumber").is(profileQueryFilters.getCardNumber()));
-        }
-
-        if (profileQueryFilters.getCardHolderName() != null) {
-            query.addCriteria(Criteria.where("cardHolderName").is(profileQueryFilters.getCardHolderName()));
-        }
-
-        if (profileQueryFilters.getExpiryDate() != null) {
-            query.addCriteria(Criteria.where("expiryDate").is(profileQueryFilters.getExpiryDate()));
         }
 
         LOGGER.info("\n{}\n", query);

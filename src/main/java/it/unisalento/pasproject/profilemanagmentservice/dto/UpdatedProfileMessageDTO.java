@@ -24,7 +24,6 @@ public class UpdatedProfileMessageDTO {
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime birthDate;
     private String cardNumber;
-    private String cardHolderName;
-    private String expiryDate;
-    private String cvv;
+    private String cardExpiryDate;
+    private String cardCvv;
 }

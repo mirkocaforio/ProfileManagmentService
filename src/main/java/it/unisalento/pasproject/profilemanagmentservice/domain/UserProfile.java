@@ -14,9 +14,8 @@ public class UserProfile extends GenericProfile {
     private String fiscalCode;
     private LocalDateTime birthDate;
     private String cardNumber;
-    private String cardHolderName;
-    private String expiryDate;
-    private String cvv;
+    private String cardExpiryDate;
+    private String cardCvv;
 
     public UserProfile() {}
 }
