@@ -7,6 +7,7 @@ import it.unisalento.pasproject.profilemanagmentservice.domain.UserProfile;
 import it.unisalento.pasproject.profilemanagmentservice.dto.*;
 import it.unisalento.pasproject.profilemanagmentservice.exceptions.ProfileNotFoundException;
 import it.unisalento.pasproject.profilemanagmentservice.repositories.ProfileRepository;
+import it.unisalento.pasproject.profilemanagmentservice.service.PaymentInfoMessageHandler;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileMessageHandler;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileQueryFilters;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileService;
@@ -27,12 +28,14 @@ public class ProfileController {
     private final ProfileService profileService;
     private final ProfileRepository profileRepository;
     private final ProfileMessageHandler profileMessageHandler;
+    private final PaymentInfoMessageHandler paymentInfoMessageHandler;
 
     @Autowired
-    public ProfileController(ProfileService profileService, ProfileRepository profileRepository, ProfileMessageHandler profileMessageHandler) {
+    public ProfileController(ProfileService profileService, ProfileRepository profileRepository, ProfileMessageHandler profileMessageHandler, PaymentInfoMessageHandler paymentInfoMessageHandler) {
         this.profileService = profileService;
         this.profileRepository = profileRepository;
         this.profileMessageHandler = profileMessageHandler;
+        this.paymentInfoMessageHandler = paymentInfoMessageHandler;
     }
 
     @GetMapping("/find/all")
@@ -104,6 +107,8 @@ public class ProfileController {
 
                 profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retUserProfile));
 
+                paymentInfoMessageHandler.sendPaymentInfoMessage(profileService.getPaymentInfoMessageDTO(retUserProfile));
+
                 return profileService.getUserProfileDTO(retUserProfile);
             }
             case MemberProfile retMemberProfile -> {
@@ -144,6 +149,7 @@ public class ProfileController {
         switch (retProfile) {
             case UserProfile retUserProfile -> {
                 profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retUserProfile));
+                paymentInfoMessageHandler.sendPaymentInfoMessage(profileService.getPaymentInfoMessageDTO(retUserProfile));
                 return profileService.getUserProfileDTO(retUserProfile);
             }
             case MemberProfile retMemberProfile -> {
@@ -175,6 +181,7 @@ public class ProfileController {
         switch (retProfile) {
             case UserProfile retUserProfile -> {
                 profileMessageHandler.sendProfileMessage(profileService.getUpdatedProfileMessageDTO(retUserProfile));
+                paymentInfoMessageHandler.sendPaymentInfoMessage(profileService.getPaymentInfoMessageDTO(retUserProfile));
                 return profileService.getUserProfileDTO(retUserProfile);
             }
             case MemberProfile retMemberProfile -> {

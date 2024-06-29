@@ -293,6 +293,21 @@ public class ProfileService {
         return updatedProfileMessageDTO;
     }
 
+    public PaymentInfoMessageDTO getPaymentInfoMessageDTO(UserProfile userProfile) {
+        PaymentInfoMessageDTO paymentInfoMessageDTO = new PaymentInfoMessageDTO();
+
+        Optional.ofNullable(userProfile.getName()).ifPresent(paymentInfoMessageDTO::setName);
+        Optional.ofNullable(userProfile.getSurname()).ifPresent(paymentInfoMessageDTO::setSurname);
+        Optional.ofNullable(userProfile.getEmail()).ifPresent(paymentInfoMessageDTO::setEmail);
+        Optional.of(userProfile.isEnabled()).ifPresent(paymentInfoMessageDTO::setEnabled);
+        Optional.ofNullable(userProfile.getRegistrationDate()).ifPresent(paymentInfoMessageDTO::setRegistrationDate);
+        Optional.ofNullable(userProfile.getCardNumber()).ifPresent(paymentInfoMessageDTO::setCardNumber);
+        Optional.ofNullable(userProfile.getCardExpiryDate()).ifPresent(paymentInfoMessageDTO::setCardExpiryDate);
+        Optional.ofNullable(userProfile.getCardCvv()).ifPresent(paymentInfoMessageDTO::setCardCvv);
+
+        return paymentInfoMessageDTO;
+    }
+
     public List<GenericProfile> findProfiles(ProfileQueryFilters profileQueryFilters) {
         Query query = new Query();
 

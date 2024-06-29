@@ -1,0 +1,19 @@
+package it.unisalento.pasproject.profilemanagmentservice.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+public class PaymentInfoMessageDTO {
+    private String name;
+    private String surname;
+    private String email;
+    private boolean isEnabled;
+    private LocalDateTime registrationDate;
+    private String cardNumber;
+    private String cardExpiryDate;
+    private String cardCvv;
+}
