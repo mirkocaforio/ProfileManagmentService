@@ -301,6 +301,9 @@ public class ProfileService {
         Optional.ofNullable(userProfile.getEmail()).ifPresent(paymentInfoMessageDTO::setEmail);
         Optional.of(userProfile.isEnabled()).ifPresent(paymentInfoMessageDTO::setEnabled);
         Optional.ofNullable(userProfile.getRegistrationDate()).ifPresent(paymentInfoMessageDTO::setRegistrationDate);
+        Optional.ofNullable(userProfile.getResidenceCity()).ifPresent(paymentInfoMessageDTO::setResidenceCity);
+        Optional.ofNullable(userProfile.getResidenceAddress()).ifPresent(paymentInfoMessageDTO::setResidenceAddress);
+        Optional.ofNullable(userProfile.getPhoneNumber()).ifPresent(paymentInfoMessageDTO::setPhoneNumber);
         Optional.ofNullable(userProfile.getCardNumber()).ifPresent(paymentInfoMessageDTO::setCardNumber);
         Optional.ofNullable(userProfile.getCardExpiryDate()).ifPresent(paymentInfoMessageDTO::setCardExpiryDate);
         Optional.ofNullable(userProfile.getCardCvv()).ifPresent(paymentInfoMessageDTO::setCardCvv);

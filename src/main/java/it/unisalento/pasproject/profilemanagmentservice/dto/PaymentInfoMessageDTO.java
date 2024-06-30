@@ -13,6 +13,9 @@ public class PaymentInfoMessageDTO {
     private String email;
     private boolean isEnabled;
     private LocalDateTime registrationDate;
+    private String residenceCity;
+    private String residenceAddress;
+    private String phoneNumber;
     private String cardNumber;
     private String cardExpiryDate;
     private String cardCvv;
