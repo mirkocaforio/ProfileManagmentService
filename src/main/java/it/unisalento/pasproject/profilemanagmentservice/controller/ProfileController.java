@@ -11,6 +11,7 @@ import it.unisalento.pasproject.profilemanagmentservice.service.PaymentInfoMessa
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileMessageHandler;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileQueryFilters;
 import it.unisalento.pasproject.profilemanagmentservice.service.ProfileService;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -29,6 +30,8 @@ public class ProfileController {
     private final ProfileRepository profileRepository;
     private final ProfileMessageHandler profileMessageHandler;
     private final PaymentInfoMessageHandler paymentInfoMessageHandler;
+
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileController.class);
 
     @Autowired
     public ProfileController(ProfileService profileService, ProfileRepository profileRepository, ProfileMessageHandler profileMessageHandler, PaymentInfoMessageHandler paymentInfoMessageHandler) {
